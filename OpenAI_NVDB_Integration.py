@@ -1,15 +1,11 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import requests
+import json
 
 load_dotenv()
-
-
-
-
 client = OpenAI()
-
-
 client.api_key = os.getenv("OPENAI_API_KEY")
 
 completion = client.chat.completions.create(
@@ -21,14 +17,16 @@ completion = client.chat.completions.create(
 )
 
 
-def run_conversation (content):
-    tools = [
-        {"type": "function",
-        "function": {
-            "name" : "get_road"
-        }
-        
-        }
-    ]
+def getNVDBInfo(url):
+  response = requests.get(url)
+  if response.status_code == 200:
+    data = response.json()
+    return str(data)
+  
+  else:
+    return "The request didn't work"
 
-print(completion.choices[0].message)    
+    
+
+print(getNVDBInfo("https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/107/statistikk"))
+#print(completion.choices[0].message)    
