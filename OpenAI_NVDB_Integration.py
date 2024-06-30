@@ -58,7 +58,7 @@ def run_conversation():
   ]
   messages=[
       {"role": "system", "content": "You are an expert on information about norwegian roads"},
-      {"role": "user", "content": "Can you give me a list of all the fylke in Norway sorted by their number"}
+      {"role": "user", "content": "Can you give me a list of all the fylke in Norway sorted by their number in increasing order"}
   ]
 
   response = client.chat.completions.create(
