@@ -91,7 +91,7 @@ def run_conversation():
       )  # extend conversation with function response
 
   second_response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o",
     messages=messages,
   )
   return second_response
