@@ -27,6 +27,15 @@ def getAllNVDBFylker():
   
   else:
     return "The request didn't work"
+  
+def getÅDTOfObject():
+  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/107?egenskap="egenskap(4623)>=1000"')
+  if response.status_code == 200:
+    data = response.json()
+    return str(data)
+  
+  else:
+    return "The request didn't work"
 
 def run_conversation():
 
@@ -52,7 +61,23 @@ def run_conversation():
               "description":"This is a number representing the fylke"
             }
           }
-        }
+        },
+      }
+    },
+    {
+      "type":"function",
+      "function":{
+          "name":"getÅDTOfObject",
+          "Description": "Return the ÅDT of an object",
+          "parameters":{
+            "type":"object",
+            "properties":{
+              "name":{
+                "type":"string",
+                "description":"The name of the object"
+              }
+            }
+          }
       }
     }
   ]
@@ -62,7 +87,7 @@ def run_conversation():
   ]
 
   response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4o",
     messages=messages,
     tools=tools,
     tool_choice="auto",
@@ -73,7 +98,7 @@ def run_conversation():
   tool_calls = response_message.tool_calls
   
   if tool_calls:
-    available_functions = {"getAllNVDBFylker": getAllNVDBFylker,}
+    available_functions = {"getAllNVDBFylker": getAllNVDBFylker, "getÅDTOfObject": getÅDTOfObject}
     messages.append(response_message)
     for tool_call in tool_calls:
       function_name = tool_call.function.name
@@ -99,5 +124,6 @@ def run_conversation():
     
 
 #print(getNVDBInfo(107))
-print(getAllNVDBFylker())
-print(run_conversation())
+#print(getAllNVDBFylker())
+#print(run_conversation())
+print(getÅDTOfObject())
