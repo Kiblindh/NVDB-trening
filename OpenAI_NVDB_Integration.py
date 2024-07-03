@@ -28,17 +28,27 @@ def getAllNVDBFylker():
   else:
     return "The request didn't work"
   
-def getÅDTOfObject():
-  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/107/statistikk')
+def getAllOceanTunnels():
+  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/581?egenskap=egenskap(9517)=13432')
   if response.status_code == 200:
     data = response.json()
-    return str(data)
+    return data
+  
+  else:
+    return "The request didn't work"
+
+def getSpecificOceanTunnel(id):
+  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/581/' + str(id))
+  if response.status_code == 200:
+    data = response.json()
+    return data
   
   else:
     return "The request didn't work"
 
 def run_conversation():
 
+  userQuestion = input("What's your question?")
   tools = [
     {
       "type":"function",
@@ -61,29 +71,57 @@ def run_conversation():
               "description":"This is a number representing the fylke"
             }
           }
-        },
+        }
       }
     },
     {
       "type":"function",
       "function":{
-          "name":"getÅDTOfObject",
-          "Description": "Return the ÅDT of an object",
+          "name":"getAllOceanTunnels",
+          "description": "Returns all the ocean tunnels in Norway with their names and ids",
           "parameters":{
             "type":"object",
             "properties":{
-              "name":{
-                "type":"string",
-                "description":"The name of the object"
-              }
+              "objekter":{
+                "type":"object",
+                "description":"Contains the properties of the tunnel"
+              },
+              "metadata":{
+                "type":"object",
+                "description":"Contains metadata of the tunnel"
+            },
+          },
+        }
+      }
+    },
+    {
+      "type":"function",
+      "function":{
+        "name":"getSpecificOceanTunnel",
+        "description":"Returns the specific ocean tunnel with the given id",
+        "parameters":{
+          "type":"object",
+          "properties":{
+            "id":{
+              "type":"integer",
+              "description":"The id of the tunnel"
+            },
+            "egenskaper":{
+              "type":"object",
+              "description":"The properties of the tunnel"
+            },
+            "metadata":{
+              "type":"object",
+              "description":"The metadata of the tunnel"
             }
           }
+        }
       }
-    }
+    },
   ]
   messages=[
       {"role": "system", "content": "You are an expert on information about norwegian roads"},
-      {"role": "user", "content": "Can you give me a list of all the fylke in Norway sorted by their number in increasing order"}
+      {"role": "user", "content": userQuestion}
   ]
 
   response = client.chat.completions.create(
@@ -98,7 +136,7 @@ def run_conversation():
   tool_calls = response_message.tool_calls
   
   if tool_calls:
-    available_functions = {"getAllNVDBFylker": getAllNVDBFylker, "getÅDTOfObject": getÅDTOfObject}
+    available_functions = {"getAllNVDBFylker": getAllNVDBFylker, "getAllOceanTunnels": getAllOceanTunnels, "getSpecificOceanTunnel": getSpecificOceanTunnel}
     messages.append(response_message)
     for tool_call in tool_calls:
       function_name = tool_call.function.name
@@ -126,4 +164,12 @@ def run_conversation():
 #print(getNVDBInfo(107))
 #print(getAllNVDBFylker())
 #print(run_conversation())
-print(getÅDTOfObject())
+#print(getAllOceanTunnels())
+
+#allOceanTunnelsId = getAllOceanTunnels()["objekter"][0]["id"]
+#print(allOceanTunnelsId)
+
+#print(getSpecificOceanTunnel(allOceanTunnelsId)["egenskaper"])
+#print(getSpecificOceanTunnel(allOceanTunnelsId))
+
+print(run_conversation())
