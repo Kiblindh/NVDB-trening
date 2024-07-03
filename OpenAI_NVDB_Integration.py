@@ -32,7 +32,7 @@ def getAllOceanTunnels():
   response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/581?egenskap=egenskap(9517)=13432')
   if response.status_code == 200:
     data = response.json()
-    return data
+    return str(data)
   
   else:
     return "The request didn't work"
@@ -41,34 +41,34 @@ def getSpecificOceanTunnel(id):
   response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/581/' + str(id))
   if response.status_code == 200:
     data = response.json()
-    return data
+    return str(data)
   
   else:
     return "The request didn't work"
 
 def run_conversation():
 
-  userQuestion = input("What's your question?")
+  userQuestion = input("Hva er spørsmålet ditt?")
   tools = [
     {
       "type":"function",
       "function":{
         "name":"getAllNVDBFylker",
-        "description":"Return all nvdb fylker",
+        "description":"Returner alle nvdb fylker",
         "parameters":{
           "type":"object",
           "properties":{
             "navn":{
               "type":"string",
-              "description":"The name of the fylke, Akershus etc"
+              "description":"Navnet til et fylke, Akershus etc"
             },
             "organisasjonsnummer":{
               "type":"integer",
-              "description":"This gives the organization number of the fylke"
+              "description":"Dette er organisasjonsnummeret til et fylke"
             },
             "nummer":{
               "type":"integer",
-              "description":"This is a number representing the fylke"
+              "description":"Dette er et nummer som representerer fylket"
             }
           }
         }
@@ -78,17 +78,17 @@ def run_conversation():
       "type":"function",
       "function":{
           "name":"getAllOceanTunnels",
-          "description": "Returns all the ocean tunnels in Norway with their names and ids",
+          "description": "Returnerer alle sjøtunneler i Norge med objekter (inneholder id (kan brukes i getSpecificTunnelById) og url) og metadata. Dette kan du gjøre ved å først kalle din gitte funksjon og deretter kalle funksjonen getSpecificOceanTunnel med id-en til tunnelen du vil ha mer informasjon om. ",
           "parameters":{
             "type":"object",
             "properties":{
               "objekter":{
                 "type":"object",
-                "description":"Contains the properties of the tunnel"
+                "description":"Inneholder informasjon om tunnelobjekter"
               },
               "metadata":{
                 "type":"object",
-                "description":"Contains metadata of the tunnel"
+                "description":"Inneholder metadata om alle tunnelene"
             },
           },
         }
@@ -98,21 +98,21 @@ def run_conversation():
       "type":"function",
       "function":{
         "name":"getSpecificOceanTunnel",
-        "description":"Returns the specific ocean tunnel with the given id",
+        "description":"Returnerer informasjon om en tunnel ved å bruke id-en til tunnelen. Kan hente ut informasjon som navnet til en tunnel, strekning til en tunnel og lokasjon, etc",
         "parameters":{
           "type":"object",
           "properties":{
             "id":{
               "type":"integer",
-              "description":"The id of the tunnel"
+              "description":"Id som representerer en tunnel"
             },
             "egenskaper":{
               "type":"object",
-              "description":"The properties of the tunnel"
+              "description":"Data til tunnelen"
             },
             "metadata":{
               "type":"object",
-              "description":"The metadata of the tunnel"
+              "description":"Metadata om tunnellen"
             }
           }
         }
@@ -120,7 +120,7 @@ def run_conversation():
     },
   ]
   messages=[
-      {"role": "system", "content": "You are an expert on information about norwegian roads"},
+      {"role": "system", "content": "Du er en ekspert på norske veier og skal alltid svare på norsk. Hvis du ikke har datagrunnlag til spørsmålet så svarer du at du mangler data"},
       {"role": "user", "content": userQuestion}
   ]
 
@@ -132,18 +132,20 @@ def run_conversation():
   )
 
   response_message = response.choices[0].message
-  print(response_message)
   tool_calls = response_message.tool_calls
+  print("\nFirst response:\n" + str(response_message))
   
   if tool_calls:
-    available_functions = {"getAllNVDBFylker": getAllNVDBFylker, "getAllOceanTunnels": getAllOceanTunnels, "getSpecificOceanTunnel": getSpecificOceanTunnel}
+    available_functions = {"getAllNVDBFylker": getAllNVDBFylker, 
+    "getAllOceanTunnels": getAllOceanTunnels, 
+    "getSpecificOceanTunnel": getSpecificOceanTunnel}
+
     messages.append(response_message)
     for tool_call in tool_calls:
       function_name = tool_call.function.name
       function_to_call = available_functions[function_name]
       function_args = json.loads(tool_call.function.arguments)
-      function_response = function_to_call(
-      )
+      function_response = function_to_call()
       messages.append(
           {
               "tool_call_id": tool_call.id,
@@ -151,25 +153,22 @@ def run_conversation():
               "name": function_name,
               "content": function_response,
           }
-      )  # extend conversation with function response
+      )  # extend conversation with function respons
+
 
   second_response = client.chat.completions.create(
     model="gpt-4o",
     messages=messages,
   )
+
+  print("\n\n Final response: \n")
   return second_response
 
     
 
 #print(getNVDBInfo(107))
 #print(getAllNVDBFylker())
-#print(run_conversation())
 #print(getAllOceanTunnels())
-
-#allOceanTunnelsId = getAllOceanTunnels()["objekter"][0]["id"]
-#print(allOceanTunnelsId)
-
-#print(getSpecificOceanTunnel(allOceanTunnelsId)["egenskaper"])
-#print(getSpecificOceanTunnel(allOceanTunnelsId))
+#print(getSpecificOceanTunnel(78730377))
 
 print(run_conversation())
