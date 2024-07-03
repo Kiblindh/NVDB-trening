@@ -29,7 +29,7 @@ def getAllNVDBFylker():
     return "The request didn't work"
   
 def getÅDTOfObject():
-  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/107?egenskap="egenskap(4623)>=1000"')
+  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/107/statistikk')
   if response.status_code == 200:
     data = response.json()
     return str(data)
