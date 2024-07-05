@@ -40,7 +40,7 @@ def getAllOceanTunnels():
   else:
     return "The request didn't work"
 
-def getSpecificOceanTunnel(id):
+def getSpecificTunnelById(id):
   response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/581/' + str(id))
   if response.status_code == 200:
     data = response.json()
@@ -49,12 +49,19 @@ def getSpecificOceanTunnel(id):
   else:
     return "The request didn't work"
 
-def getTunnelsWithHighestÅDT(higherThanValue):
-  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/67?overlapp=540(4623>={higherThanValue})')
+def getTrafficIdOfAllTunnelSections():
+  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/540?overlapp=67')
   if response.status_code == 200:
     data = response.json()
     return str(data)
-  
+  else:
+    return "The request didn't work"
+
+def getTunnelSectionById(id):
+  response = requests.get('https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/540/' + str(id))
+  if response.status_code == 200:
+    data = response.json()
+    return str(data)
   else:
     return "The request didn't work"
 
@@ -100,7 +107,7 @@ tools = [
     {
       "type":"function",
       "function":{
-        "name":"getSpecificOceanTunnel",
+        "name":"getSpecificTunnelById",
         "description":"Returnerer informasjon om en tunnel ved å bruke id-en til tunnelen. Kan hente ut informasjon som navnet til en tunnel, strekning til en tunnel og lokasjon, etc",
         "parameters":{
           "type":"object",
@@ -113,26 +120,56 @@ tools = [
           "required":["id"],
         }
       }
+    },
+    {
+      "type":"function",
+      "function":{
+        "name":"getTrafficIdOfAllTunnelSections",
+        "description":"Returnerer id-ene til alle tunnelseksjoner som kan brukes videre i getTunnelSectionById for å hente ut informasjon om en tunnelseksjon",
+        "parameters":{
+          "type":"object",
+          "properties":{}
+        }
+      }
+    },
+    {
+      "type":"function",
+      "function":{
+        "name":"getTunnelSectionById",
+        "description":"Returnerer informasjon om en tunnelseksjon ved å bruke id-en til tunnelseksjonen. Kan hente ut informasjon som navnet, ådt og strekning, etc, til en tunnelseksjon",
+        "parameters":{
+          "type":"object",
+          "properties":{
+            "id":{
+              "type":"integer",
+              "description":"Id som representerer en tunnel seksjon"
+            },
+          },
+          "required":["id"],
+        }
+      }
     }
   ]
 
 # Dictionary of available functions
 available_functions = {
-    "getSpecificOceanTunnel": getSpecificOceanTunnel,
+    "getSpecificTunnelById": getSpecificTunnelById,
     "getAllOceanTunnels": getAllOceanTunnels,
-    "getAllNVDBFylker": getAllNVDBFylker
+    "getAllNVDBFylker": getAllNVDBFylker,
+    "getTunnelSectionById": getTunnelSectionById,
+    "getTrafficIdOfAllTunnelSections": getTrafficIdOfAllTunnelSections,
 }
 
 userQuestion = input("Hva lurer du på?")
 
 # Main function to run the conversation
-def run_conversation(messages=None, depth=0, max_depth=30):
+def run_conversation(messages=None, depth=0, max_depth=50):
     if messages is None:
         messages = [{"role": "user", "content": userQuestion}, {"role": "system", "content": "You are an expert on Norwegian roads. You're always supposed to answer in Norwegian and to give the data you based your answer on in your final response in a json format"}]
     
     # Send the conversation and available functions to the model
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=messages,
         tools=tools,
         tool_choice="auto"
