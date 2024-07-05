@@ -1,14 +1,17 @@
-from openai import OpenAI
-from dotenv import load_dotenv
 import os
-import requests
 import json
+import random
+import requests
+from dotenv import load_dotenv
+from openai import OpenAI
 
+# Load environment variables from .env file
 load_dotenv()
-client = OpenAI()
-client.api_key = os.getenv("OPENAI_API_KEY")
 
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Define the functions for retrieving information
 def getNVDBInfo(id):
   response = requests.get("https://nvdbapiles-v3.atlas.vegvesen.no/vegobjekter/" + str(id) + "/statistikk") #example is id 107
   if response.status_code == 200:
@@ -55,10 +58,8 @@ def getTunnelsWithHighestÅDT(higherThanValue):
   else:
     return "The request didn't work"
 
-def run_conversation():
-
-  userQuestion = input("Hva er spørsmålet ditt?")
-  tools = [
+# Available tools
+tools = [
     {
       "type":"function",
       "function":{
@@ -115,23 +116,27 @@ def run_conversation():
     }
   ]
 
+# Dictionary of available functions
+available_functions = {
+    "getSpecificOceanTunnel": getSpecificOceanTunnel,
+    "getAllOceanTunnels": getAllOceanTunnels,
+    "getAllNVDBFylker": getAllNVDBFylker
+}
 
+userQuestion = input("Hva lurer du på?")
 
-
-
-  
-  messages=[
-      {"role": "system", "content": "Du er en ekspert på norske veier og skal alltid svare på norsk. Hvis du ikke har datagrunnlag til spørsmålet så svarer du at du mangler data"},
-      {"role": "user", "content": userQuestion}
-  ]
-  
-  if messages is None:
+# Main function to run the conversation
+def run_conversation(messages=None, depth=0, max_depth=30):
+    if messages is None:
+        messages = [{"role": "user", "content": userQuestion}, {"role": "system", "content": "You are an expert on Norwegian roads. You're always supposed to answer in Norwegian and to give the data you based your answer on in your final response in a json format"}]
+    
+    # Send the conversation and available functions to the model
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo",
         messages=messages,
         tools=tools,
-        tool_choice="auto",
-      )
+        tool_choice="auto"
+    )
     
     print("\nResponse")
     print(response)
@@ -179,104 +184,6 @@ def run_conversation():
     
     return response
 
-
-  
-    
-
-#print(getNVDBInfo(107))
-#print(getAllNVDBFylker())
-#print(getAllOceanTunnels())
-#print(getSpecificOceanTunnel(78730377))
-
-print(run_conversation())
-
-
-"""
-
-  response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=messages,
-    tools=tools,
-    tool_choice="auto",
-  )
-
-  response_message = response.choices[0].message
-  tool_calls = response_message.tool_calls
-  print("\nFirst response:\n" + str(response_message))
-  
-  if tool_calls:
-    available_functions = {"getAllNVDBFylker": getAllNVDBFylker, 
-    "getAllOceanTunnels": getAllOceanTunnels, 
-    "getSpecificOceanTunnel": getSpecificOceanTunnel}
-
-    messages.append(response_message)
-    for tool_call in tool_calls:
-      function_name = tool_call.function.name
-      function_to_call = available_functions[function_name]
-      function_args = json.loads(tool_call.function.arguments)
-      function_response = function_to_call()
-      messages.append(
-          {
-              "tool_call_id": tool_call.id,
-              "role": "tool",
-              "name": function_name,
-              "content": function_response,
-          }
-      )  # extend conversation with function respons
-
-      print("\n These tools/functions are called \n")
-      print(tool_call)
-      print("\n", function_name, "\n")
-      print("\n", function_to_call, "\n")
-      print("\n", function_args, "\n")
-      print("Second response:\n")
-      print("\n", function_response)
-
-
-
-  second_response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=messages,
-    tools=tools,
-    tool_choice="auto",
-  )
-
-  response_message2 = second_response.choices[0].message
-  tool_calls2 = response_message2.tool_calls
-
-  if tool_calls2:
-    available_functions2 = {"getAllNVDBFylker": getAllNVDBFylker, 
-    "getSpecificOceanTunnel": getSpecificOceanTunnel}
-
-    messages.append(response_message2)
-    print("\n\n\n", messages, "\n\n\n")
-    for tool_call2 in tool_calls2:
-      function_name2 = tool_call2.function.name
-      function_to_call2 = available_functions2[function_name2]
-      function_args2 = json.loads(tool_call2.function.arguments)
-      function_response2 = function_to_call2()
-      messages.append(
-          {
-              "tool_call_id": tool_call2.id,
-              "role": "tool",
-              "name": function_name2,
-              "content": function_response2,
-          }
-      )  # extend conversation with function respons
-
-      print("\n These tools/functions are called \n")
-      print(tool_call2)
-      print("\n", function_name2, "\n")
-      print("\n", function_to_call2, "\n")
-      print("\n", function_args2, "\n")
-      print("Function response 2:\n")
-      print("\n", function_response2)
-
-  third_response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=messages
-  )
-
-  print("\n\n Final response: \n")
-  return third_response
-  """
+# Run the conversation and print the final output
+response = run_conversation()
+print(f"\n\nFinal Output:\n{response.choices[0].message.content}")
