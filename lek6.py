@@ -113,7 +113,7 @@ tools = [
       "type":"function",
       "function":{
         "name":"getTrafficIdOfAllTunnelSections",
-        "description":"Returnerer id-ene til alle trafikkmengde-objekter i alle tunnelløp. Id-en kan brukes videre i getTunnelSectionTrafficById",
+        "description":"Returnerer id-ene til alle trafikkmengde-objekter i alle tunnelløp.",
         "parameters":{
           "type":"object",
           "properties":{}
@@ -124,7 +124,7 @@ tools = [
       "type":"function",
       "function":{
         "name":"getTunnelSectionTrafficById",
-        "description":"Returnerer trafikkmengde-objekt i tunnelløpet ved å bruke id-en til et tunnelløp. Kan hente ut informasjon som ådt, strekning, etc. ",
+        "description":"Returnerer trafikkmengde-objektet ved å bruke id-en til et trafikkmengdeobjekt. Kan hente ut informasjon som ådt, strekning, etc i et tunnelløp. Id-en kan oppnås ved å bruke getTrafficIdOfAllTunnelSections-funksjonen",
         "parameters":{
           "type":"object",
           "properties":{
